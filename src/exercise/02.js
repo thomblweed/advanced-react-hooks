@@ -44,16 +44,17 @@ const useAsync = (asyncCallback, initialState, dependencies) => {
     }
     // then you can dispatch and handle the promise etc...
     if (
-      !dependencies ||
-      state.status === 'pending' ||
-      state.status === 'resolved' ||
-      state.status === 'rejected'
+      !dependencies
+      // ||
+      // state.status === 'pending' ||
+      // state.status === 'resolved' ||
+      // state.status === 'rejected'
     ) {
       return
     }
     console.log('CALL')
     dispatch({type: 'pending'})
-    asyncCallback().then(
+    promise.then(
       data => {
         dispatch({type: 'resolved', data})
       },
@@ -64,7 +65,8 @@ const useAsync = (asyncCallback, initialState, dependencies) => {
     // 🐨 you'll accept dependencies as an array and pass that here.
     // 🐨 because of limitations with ESLint, you'll need to ignore
     // the react-hooks/exhaustive-deps rule. We'll fix this in an extra credit.
-  }, [dependencies, state])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, dependencies)
   // --------------------------- end ---------------------------
 
   return state
