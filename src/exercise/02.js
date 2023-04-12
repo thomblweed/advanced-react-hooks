@@ -31,7 +31,7 @@ function asyncReducer(state, action) {
   }
 }
 
-const useAsync = (asyncCallback, initialState, dependencies) => {
+const useAsync = (asyncCallback, initialState) => {
   // -------------------------- start --------------------------
 
   const [state, dispatch] = React.useReducer(asyncReducer, initialState)
@@ -43,15 +43,6 @@ const useAsync = (asyncCallback, initialState, dependencies) => {
       return
     }
     // then you can dispatch and handle the promise etc...
-    if (
-      !dependencies
-      // ||
-      // state.status === 'pending' ||
-      // state.status === 'resolved' ||
-      // state.status === 'rejected'
-    ) {
-      return
-    }
     console.log('CALL')
     dispatch({type: 'pending'})
     promise.then(
@@ -65,8 +56,7 @@ const useAsync = (asyncCallback, initialState, dependencies) => {
     // 🐨 you'll accept dependencies as an array and pass that here.
     // 🐨 because of limitations with ESLint, you'll need to ignore
     // the react-hooks/exhaustive-deps rule. We'll fix this in an extra credit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, dependencies)
+  }, [asyncCallback])
   // --------------------------- end ---------------------------
 
   return state
@@ -77,25 +67,21 @@ function PokemonInfo({pokemonName}) {
   // 💰 look below to see how the useAsync hook is supposed to be called
   // 💰 If you want some help, here's the function signature (or delete this
 
+  const asyncCallback = React.useCallback(() => {
+    if (!pokemonName) {
+      return
+    }
+    return fetchPokemon(pokemonName)
+  }, [pokemonName])
+
   // 🐨 here's how you'll use the new useAsync hook you're writing:
-  const state = useAsync(
-    () => {
-      console.log({pokemonName})
-      if (!pokemonName) {
-        return
-      }
-      console.log('BYPASS RETURN')
-      return fetchPokemon(pokemonName)
-    },
-    {
-      /* initial state */
-      status: pokemonName ? 'pending' : 'idle',
-      // 🐨 this will need to be "data" instead of "pokemon"
-      data: null,
-      error: null,
-    },
-    [pokemonName],
-  )
+  const state = useAsync(asyncCallback, {
+    /* initial state */
+    status: pokemonName ? 'pending' : 'idle',
+    // 🐨 this will need to be "data" instead of "pokemon"
+    data: null,
+    error: null,
+  })
   // 🐨 this will change from "pokemon" to "data"
   const {data, status, error} = state
 
