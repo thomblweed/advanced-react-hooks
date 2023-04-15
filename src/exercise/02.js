@@ -3,11 +3,11 @@
 
 import * as React from 'react'
 import {
-  fetchPokemon,
-  PokemonForm,
   PokemonDataView,
-  PokemonInfoFallback,
   PokemonErrorBoundary,
+  PokemonForm,
+  PokemonInfoFallback,
+  fetchPokemon,
 } from '../pokemon'
 
 // 🐨 this is going to be our generic asyncReducer
@@ -33,16 +33,34 @@ function asyncReducer(state, action) {
 
 const useAsync = initialState => {
   const [state, dispatch] = React.useReducer(asyncReducer, initialState)
+  const mounted = React.useRef(false)
+
+  const unsafeDispatch = React.useCallback(
+    (...args) => {
+      if (mounted.current) {
+        dispatch(...args)
+      }
+    },
+    [dispatch],
+  )
+
+  React.useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   const run = React.useCallback(promise => {
-    dispatch({type: 'pending'})
+    unsafeDispatch({type: 'pending'})
     promise
       .then(data => {
-        dispatch({type: 'resolved', data})
+        unsafeDispatch({type: 'resolved', data})
       })
       .catch(error => {
-        dispatch({type: 'rejected', error})
+        unsafeDispatch({type: 'rejected', error})
       })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // React.useEffect(() => {
@@ -84,6 +102,7 @@ function PokemonInfo({pokemonName}) {
       return
     }
     run(fetchPokemon(pokemonName))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pokemonName, run])
 
   // const {data, status, error} = state
